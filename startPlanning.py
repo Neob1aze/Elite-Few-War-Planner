@@ -113,7 +113,8 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 		OptimizingAttack = False
 		hardAttack = 0
 		for FMEchamp in sortedFMEChampTitans:
-			if (FMEChampionsInfo[FMEchamp].titanPower>RivalChampionsInfo[matchup].titanPower and FMEChampionsInfo[FMEchamp].attacksRemaining>0 and RivalChampionsInfo[matchup].titanCleared == False):
+			if (FMEChampionsInfo[FMEchamp].titanPower>RivalChampionsInfo[matchup].titanPower and 
+				FMEChampionsInfo[FMEchamp].attacksRemaining>0 and RivalChampionsInfo[matchup].titanCleared == False):
 				# don't use titan attacks of our top 15 heroes unless its bridge and there is no other option
 				if ((x for x, y in enumerate(sortedFMEChampHeroes) if y == FMEchamp <= 16) or RivalChampionsInfo[matchup].titanLocation == "Bridge"):
 					if optimalChamp == "":
@@ -123,7 +124,9 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 						optimalChamp = FMEchamp
 						# break
 					OptimizingAttack = True
-			elif (OptimizingAttack == False and FMEChampionsInfo[FMEchamp].attacksRemaining>0 and RivalChampionsInfo[matchup].titanCleared == False and (RivalChampionsInfo[matchup].titanLocation == "Bridge" or byPassBridgeRestriction == True)):
+			elif (OptimizingAttack == False and FMEChampionsInfo[FMEchamp].attacksRemaining>0 and 
+				RivalChampionsInfo[matchup].titanCleared == False and 
+				(RivalChampionsInfo[matchup].titanLocation == "Bridge" or byPassBridgeRestriction == True)):
 				# print("Considering: "+FMEchamp[FMEChampionName] + " vs. " +matchup[RivalChampionName]+ " "+ str(matchup[1][RivalTitanPower]))
 				if (FMEChampionsInfo[FMEchamp].titanPower + 10000 > RivalChampionsInfo[matchup].titanPower):
 					optimalChamp = FMEchamp
