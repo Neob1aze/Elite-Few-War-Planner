@@ -114,15 +114,14 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 		hardAttack = 0
 		for FMEchamp in sortedFMEChampTitans:
 			if (FMEChampionsInfo[FMEchamp].titanPower>RivalChampionsInfo[matchup].titanPower and 
-				FMEChampionsInfo[FMEchamp].attacksRemaining>0 and RivalChampionsInfo[matchup].titanCleared == False):
+				FMEChampionsInfo[FMEchamp].attacksRemaining>0 and 
+				RivalChampionsInfo[matchup].titanCleared == False):
 				# don't use titan attacks of our top 15 heroes unless its bridge and there is no other option
 				if ((x for x, y in enumerate(sortedFMEChampHeroes) if y == FMEchamp <= 16) or RivalChampionsInfo[matchup].titanLocation == "Bridge"):
 					if optimalChamp == "":
 						optimalChamp = FMEchamp
-						# break
 					elif FMEChampionsInfo[FMEchamp].titanPower < FMEChampionsInfo[optimalChamp].titanPower:
 						optimalChamp = FMEchamp
-						# break
 					OptimizingAttack = True
 			elif (OptimizingAttack == False and FMEChampionsInfo[FMEchamp].attacksRemaining>0 and 
 				RivalChampionsInfo[matchup].titanCleared == False and 
@@ -160,28 +159,46 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 		if(optimalChamp != ""):
 			print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
 			FMEChampionsInfo[optimalChamp].assignAttacks(matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded)
-			if (positionCleared):
-				RivalChampionsInfo[matchup].titanCleared = True
+			RivalChampionsInfo[matchup].titanCleared = positionCleared
 
 def calculateHeroAttacks():
 	print("\n\nHero Attacks:")
 	# for matchup in sortedRivalChampHeroesAndLocations:
 	for matchup in sortedRivalChampHeroesAndLocations:
+		optimalChamp = ""
+		attackNote = ""
+		positionCleared = True
+		OptimizingAttack = False
+		# print("\n")
 		for FMEchamp in sortedFMEChampHeroes:
-			if (FMEChampionsInfo[FMEchamp].heroPower > RivalChampionsInfo[matchup].heroPower and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
+			# print("Considering "+FMEchamp+" vs " + matchup)
+			if ((FMEChampionsInfo[FMEchamp].heroPower > RivalChampionsInfo[matchup].heroPower or 
+				FMEChampionsInfo[FMEchamp].heroPower + 1000 > RivalChampionsInfo[matchup].heroPower) and 
+				FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
 				# Check to see if there is a clear advantage number wise
-				print(FMEchamp+"(H:"+str(FMEChampionsInfo[FMEchamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation)
-				# FMEChampAttacks[FMEchamp[FMEChampionName]] = FMEChampAttacks[FMEchamp[FMEChampionName]] - 1
-				FMEChampionsInfo[FMEchamp].assign(matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation)
-				# matchup[1][RivalHeroLocationNeedsClearing] = False
-				RivalChampionsInfo[matchup].heroCleared = True
-				break
-			elif ((FMEChampionsInfo[FMEchamp].heroPower+10000)>RivalChampionsInfo[matchup].heroPower and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
-				# Times are tough, check to see if there is someone within 10k power we can fight
-				print(FMEchamp+"(H:"+str(FMEChampionsInfo[FMEchamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + " - May require followup attack")
-				FMEChampionsInfo[FMEchamp].assign(matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation)
-				RivalChampionsInfo[matchup].heroCleared = True
-				break 
+				# print("Considering "+FMEchamp+" vs " + matchup)
+				OptimizingAttack = True
+				if optimalChamp == "":
+					optimalChamp = FMEchamp
+					# print("Optimal Champ: "+ optimalChamp)
+				elif (FMEChampionsInfo[FMEchamp].heroPower < FMEChampionsInfo[optimalChamp].heroPower):
+					optimalChamp = FMEchamp
+
+			elif (not OptimizingAttack and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
+				if ((FMEChampionsInfo[FMEchamp].heroPower+5000)>RivalChampionsInfo[matchup].heroPower and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and 
+					RivalChampionsInfo[matchup].heroCleared == False):
+					attackNote = " - Should be close, may require cleanup"
+					optimalChamp = FMEchamp
+				elif ((FMEChampionsInfo[FMEchamp].heroPower+10000)>RivalChampionsInfo[matchup].heroPower and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and 
+					RivalChampionsInfo[matchup].heroCleared == False):
+					# Times are tough, check to see if there is someone within 10k power we can fight
+					attackNote = " - Unless you get lucky this attack may require cleanup"
+					optimalChamp = FMEchamp
+
+		if(optimalChamp != "" and FMEChampionsInfo[optimalChamp].attacksRemaining > 0):
+			print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
+			FMEChampionsInfo[optimalChamp].assign(matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation)
+			RivalChampionsInfo[matchup].heroCleared = positionCleared
 def main():
 	calculateTitanAttacks(False)
 	calculateHeroAttacks()
@@ -212,3 +229,4 @@ def main():
 
 
 main()
+input('\nPress Enter to exit')
