@@ -129,7 +129,7 @@ sortedRivalChampTitansAndLocations = sorted(RivalChampionsInfo.keys(), reverse=T
 
 # Determine Optimal Titan matchups
 def calculateTitanAttacks(byPassBridgeRestriction):
-	print("\n\nTitan Attacks:")
+	# print("\n\nTitan Attacks:")
 	for matchup in sortedRivalChampTitansAndLocations:
 		optimalChamp = ""
 		attackNote = ""
@@ -175,7 +175,7 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 					positionCleared = False
 					hardAttack = hardAttack + 1;
 					
-					print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
+					# print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
 					FMEChampionsInfo[optimalChamp].assignAttacks("Titan", matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded, attackNote)
 					FMEChampionsInfo[optimalChamp].attackNote=attackNote
 
@@ -183,12 +183,12 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 						positionCleared = True
 					break
 		if(optimalChamp != ""):
-			print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
+			# print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
 			FMEChampionsInfo[optimalChamp].assignAttacks("Titan", matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded, attackNote)
 			RivalChampionsInfo[matchup].titanCleared = positionCleared
 
 def calculateHeroAttacks():
-	print("\n\nHero Attacks:")
+	# print("\n\nHero Attacks:")
 	# for matchup in sortedRivalChampHeroesAndLocations:
 	for matchup in sortedRivalChampHeroesAndLocations:
 		optimalChamp = ""
@@ -222,7 +222,7 @@ def calculateHeroAttacks():
 					optimalChamp = FMEchamp
 
 		if(optimalChamp != "" and FMEChampionsInfo[optimalChamp].attacksRemaining > 0):
-			print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
+			# print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
 			FMEChampionsInfo[optimalChamp].assign("Hero", matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation, attackNote)
 			RivalChampionsInfo[matchup].heroCleared = positionCleared
 def main():
