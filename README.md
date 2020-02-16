@@ -33,4 +33,4 @@ This is a python script for determing war plans in Hero Wars. Currently this sho
 
 # Screenshots:
 
-![alt text](../resources/ScriptOutput.png)
+![alt text](https://github.com/Neob1aze/Elite-Few-War-Planner/blob/master/resources/ScriptOutput.png)
