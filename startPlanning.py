@@ -3,15 +3,24 @@ import sys
 from collections import defaultdict
 
 class AssignmentInfo:
-	def __init__(self, rivalName, rivalPower, rivalLocation):
+	def __init__(self, assignmentType, rivalName, rivalPower, rivalLocation):
+		self.assignmentType = assignmentType
 		self.rivalName = rivalName
 		self.rivalPower = rivalPower
 		self.rivalLocation = rivalLocation
+		self.attackNote = ""
+
+	def __init__(self, assignmentType, rivalName, rivalPower, rivalLocation, attackNote):
+		self.assignmentType = assignmentType
+		self.rivalName = rivalName
+		self.rivalPower = rivalPower
+		self.rivalLocation = rivalLocation
+		self.attackNote = attackNote
 
 	def __repr__(self):
 		return self.__str__()
 	def __str__(self):
-		return "AssignmentInfo:{ " + self.rivalName + ","+ str(self.rivalPower) + ","+ str(self.rivalLocation) + "}"
+		return "AssignmentInfo:{ " + self.assignmentType + "," +self.rivalName + ","+ str(self.rivalPower) + ","+ str(self.rivalLocation) + ","+ self.attackNote+"}"
 
 class RivalChampionInfo:
 	def __init__(self, heroPower, heroLocation, titanPower, titanLocation):
@@ -32,18 +41,34 @@ class ChampionInfo:
 		self.titanPower = titanPower
 		self.heroPower = heroPower
 		self.attacksRemaining = 2
-		self.attackNote = ""
 		self.assignments = []
 	
-	def assign(self, rivalName, rivalPower, rivalLocation):
-		assignment = AssignmentInfo(rivalName, rivalPower, rivalLocation)
+	def assign(self, assignmentType, rivalName, rivalPower, rivalLocation, attackNote):
+		assignment = AssignmentInfo(assignmentType, rivalName, rivalPower, rivalLocation, attackNote)
 		self.assignments.append(assignment)
 		self.attacksRemaining = self.attacksRemaining - 1
 
-	def assignAttacks(self, rivalName, rivalPower, rivalLocation, numberOfAttacks):
-		assignment = AssignmentInfo(rivalName, rivalPower, rivalLocation)
+
+	def assignAttacks(self, assignmentType, rivalName, rivalPower, rivalLocation, numberOfAttacks, attackNote):
+		assignment = AssignmentInfo(assignmentType, rivalName, rivalPower, rivalLocation, attackNote)
 		self.assignments.append(assignment)
 		self.attacksRemaining = self.attacksRemaining - numberOfAttacks
+
+	def printAssignments(self, champName):
+		for assignment in self.assignments:
+			# print(assignment)
+			if assignment.assignmentType == "Hero":
+				print(champName+"(H:"+str(self.heroPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
+			elif assignment.assignmentType == "Titan":
+				print(champName+"(T:"+str(self.titanPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
+	
+	def printAssignmentCategory(self, champName, assignmentType):
+		for assignment in self.assignments:
+			if assignment.assignmentType == assignmentType:
+				if assignment.assignmentType == "Hero":
+					print(champName+"(H:"+str(self.heroPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
+				elif assignment.assignmentType == "Titan":
+					print(champName+"(T:"+str(self.titanPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
 
 	def clearAttacks(self):
 		self.assignments.clear()
@@ -56,15 +81,15 @@ class ChampionInfo:
 
 if not len(sys.argv) >= 2:
 	print(sys.argv)
-	print("usage: startPlanning.py scriptTemplate.xslx <PrioritiseTitanKills = True|False>")
+	print("usage: startPlanning.py scriptTemplate.xslx <CategorizeAssignments = True|False>")
 	exit()
 
 # =================================== Start Global Variable Setup ===================================
 loc = sys.argv[1]
 if(len(sys.argv) == 2):
-	PrioritiseTitanKills = False	
+	categorizeAssignments = False	
 else:
-	PrioritiseTitanKills = sys.argv[2]
+	categorizeAssignments = sys.argv[2]
 wb = xlrd.open_workbook(loc)
 FMEChampions = wb.sheet_by_index(0)
 FMEOpponentDefense = wb.sheet_by_index(1)
@@ -151,7 +176,7 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 					hardAttack = hardAttack + 1;
 					
 					print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
-					FMEChampionsInfo[optimalChamp].assign(matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded)
+					FMEChampionsInfo[optimalChamp].assignAttacks("Titan", matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded, attackNote)
 					FMEChampionsInfo[optimalChamp].attackNote=attackNote
 
 					if (hardAttack >= 2):
@@ -159,7 +184,7 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 					break
 		if(optimalChamp != ""):
 			print(optimalChamp+"(T:"+str(FMEChampionsInfo[optimalChamp].titanPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].titanPower)+ " "+ RivalChampionsInfo[matchup].titanLocation + attackNote)
-			FMEChampionsInfo[optimalChamp].assignAttacks(matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded)
+			FMEChampionsInfo[optimalChamp].assignAttacks("Titan", matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded, attackNote)
 			RivalChampionsInfo[matchup].titanCleared = positionCleared
 
 def calculateHeroAttacks():
@@ -198,19 +223,28 @@ def calculateHeroAttacks():
 
 		if(optimalChamp != "" and FMEChampionsInfo[optimalChamp].attacksRemaining > 0):
 			print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
-			FMEChampionsInfo[optimalChamp].assign(matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation)
+			FMEChampionsInfo[optimalChamp].assign("Hero", matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation, attackNote)
 			RivalChampionsInfo[matchup].heroCleared = positionCleared
 def main():
 	calculateTitanAttacks(False)
 	calculateHeroAttacks()
-	# if(PrioritiseTitanKills):
-	# 	calculateTitanAttacks(True)
-	# 	calculateHeroAttacks()
-	# else:	
-	# 	calculateHeroAttacks()
-	# 	calculateTitanAttacks(True)
-	print("\n\nRemaining Attackers:")
+	if(categorizeAssignments):
+		categories = {"Titan", "Hero"}
+		for category in categories:
+			print("\n\n"+ category +" Attacks:")
+			for champ in FMEChampionsInfo.keys():
+				if FMEChampionsInfo[champ].attacksRemaining < 2:
+					FMEChampionsInfo[champ].printAssignmentCategory(champ, category)
+
+	else:	
+		print("\n\nAssignments:")
+		for champ in FMEChampionsInfo.keys():
+			if FMEChampionsInfo[champ].attacksRemaining < 2:
+				FMEChampionsInfo[champ].printAssignments(champ)
 	
+
+
+	print("\n\nRemaining Attackers:")	
 	# for hero in FMEChampAttacks.keys():
 	for hero in FMEChampionsInfo.keys():
 		if FMEChampionsInfo[hero].attacksRemaining > 0:
