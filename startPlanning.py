@@ -251,15 +251,10 @@ def main():
 			print(hero, "(H:"+str(FMEChampionsInfo[hero].heroPower)+",T:"+str(FMEChampionsInfo[hero].titanPower)+") has "+ str(FMEChampionsInfo[hero].attacksRemaining)+" attacks remaining.")
 
 	print("\n\nRemaining Targets:")
-	# for target in RivalChampHeroesAndLocations:
 	for target in RivalChampionsInfo.keys():
-		# print(target)
 		if RivalChampionsInfo[target].heroCleared == False :
-			# print(RivalChampHeroesAndLocations[target])
 			print(target+" H:"+str(RivalChampionsInfo[target].heroPower)+" at "+ RivalChampionsInfo[target].heroLocation)
-		# if RivalChampTitansAndLocations[target][RivalTitanLocationNeedsClearing] == True :
 		if RivalChampionsInfo[target].titanCleared == False :
-			# print(RivalChampTitansAndLocations[target])
 			print(target+" T:"+str(RivalChampionsInfo[target].titanPower)+" at "+ RivalChampionsInfo[target].titanLocation)
 
 
