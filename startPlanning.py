@@ -1,6 +1,10 @@
 import xlrd
 import sys
+# import pdb
+
 from collections import defaultdict
+sys.argv[1] = "C:\\Users\\theco\\Documents\\Hero Wars\\AssignmentScript\\FMEVsGermanSoldiers3-23.xlsx"
+sys.argv[2] = True
 
 class AssignmentInfo:
 	def __init__(self, assignmentType, rivalName, rivalPower, rivalLocation):
@@ -97,6 +101,9 @@ FMEOpponentDefense = wb.sheet_by_index(1)
 #Setup Values for Tracking
 FMEChampionsInfo = {}
 RivalChampionsInfo = {}
+IgnoreBuildings = []
+DifficultyScore = {}
+Buildings = []
 
 for i in range (FMEChampions.nrows):
 	# print(FMEChampions.row_values(i))
@@ -111,9 +118,6 @@ for x in range (FMEOpponentDefense.nrows):
 	RivalChamp = FMEOpponentDefense.cell_value(x,0)
 	RivalChampionsInfo[RivalChamp]=RivalChampionInfo(FMEOpponentDefense.cell_value(x,1),FMEOpponentDefense.cell_value(x,2),FMEOpponentDefense.cell_value(x,3),FMEOpponentDefense.cell_value(x,4))
 
-# print(FMEChampionsInfo)
-# print(RivalChampionsInfo)
-# exit()
 
 #Sort Our Heroes and Titan Powers for comparisons
 sortedFMEChampHeroes = sorted(FMEChampionsInfo.keys(), reverse=True, key=lambda x:FMEChampionsInfo[x].heroPower)
@@ -121,6 +125,31 @@ sortedFMEChampTitans = sorted(FMEChampionsInfo.keys(), reverse=True, key=lambda 
 sortedRivalChampHeroesAndLocations = sorted(RivalChampionsInfo.keys(), reverse=True, key=lambda x:RivalChampionsInfo[x].heroPower) 
 sortedRivalChampTitansAndLocations = sorted(RivalChampionsInfo.keys(), reverse=True, key=lambda x:RivalChampionsInfo[x].titanPower)
 
+#Setup Some Info we May Use Later
+for rival in RivalChampionsInfo.keys():
+	# Initialize Building Names
+	if RivalChampionsInfo[rival].titanLocation not in Buildings:
+		Buildings.append(RivalChampionsInfo[rival].titanLocation)
+	if RivalChampionsInfo[rival].heroLocation not in Buildings:
+		Buildings.append(RivalChampionsInfo[rival].heroLocation)
+
+	# Determine Building Difficulty
+	# score = (x for x, y in enumerate(sortedRivalChampHeroesAndLocations) if y == rival)
+	score = sortedRivalChampHeroesAndLocations.index(rival)
+	if RivalChampionsInfo[rival].heroLocation in DifficultyScore:
+		DifficultyScore[RivalChampionsInfo[rival].heroLocation] = DifficultyScore[RivalChampionsInfo[rival].heroLocation] + score
+	else:
+		DifficultyScore[RivalChampionsInfo[rival].heroLocation] = score
+
+	# score = (x for x, y in enumerate(sortedRivalChampTitansAndLocations) if y == rival)
+	score = sortedRivalChampTitansAndLocations.index(rival)
+	if RivalChampionsInfo[rival].titanLocation in DifficultyScore:
+		DifficultyScore[RivalChampionsInfo[rival].titanLocation] = DifficultyScore[RivalChampionsInfo[rival].titanLocation] + score
+	else:
+		DifficultyScore[RivalChampionsInfo[rival].titanLocation] = score
+
+# print(DifficultyScore)
+# exit()
 
 # =================================== Stop Global Variable Setup. ===================================
 # print(sortedFMEChampHeroes)
@@ -128,7 +157,7 @@ sortedRivalChampTitansAndLocations = sorted(RivalChampionsInfo.keys(), reverse=T
 # exit()
 
 # Determine Optimal Titan matchups
-def calculateTitanAttacks(byPassBridgeRestriction):
+def calculateTitanAttacks(matchAgainstTop):
 	# print("\n\nTitan Attacks:")
 	for matchup in sortedRivalChampTitansAndLocations:
 		optimalChamp = ""
@@ -139,19 +168,26 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 		hardAttack = 0
 		for FMEchamp in sortedFMEChampTitans:
 			if (FMEChampionsInfo[FMEchamp].titanPower>RivalChampionsInfo[matchup].titanPower and 
-				FMEChampionsInfo[FMEchamp].attacksRemaining>0 and 
+				FMEChampionsInfo[FMEchamp].attacksRemaining>0 and
+				RivalChampionsInfo[matchup].titanLocation not in IgnoreBuildings and
 				RivalChampionsInfo[matchup].titanCleared == False):
 				# don't use titan attacks of our top 15 heroes unless its bridge and there is no other option
-				if ((x for x, y in enumerate(sortedFMEChampHeroes) if y == FMEchamp <= 16) or RivalChampionsInfo[matchup].titanLocation == "Bridge"):
+				if ((x for x, y in enumerate(sortedFMEChampHeroes) if y == FMEchamp <= 5 and matchAgainstTop) or RivalChampionsInfo[matchup].titanLocation == "Bridge"):
 					if optimalChamp == "":
 						optimalChamp = FMEchamp
 					elif (FMEChampionsInfo[FMEchamp].titanPower < FMEChampionsInfo[optimalChamp].titanPower and 
 						FMEChampionsInfo[FMEchamp].heroPower < FMEChampionsInfo[optimalChamp].heroPower):
 						optimalChamp = FMEchamp
 					OptimizingAttack = True
+					
+					# Break and move on if we're matching against top guys
+					if(matchAgainstTop):
+						break
+
+
 			elif (OptimizingAttack == False and FMEChampionsInfo[FMEchamp].attacksRemaining>0 and 
 				RivalChampionsInfo[matchup].titanCleared == False and 
-				(RivalChampionsInfo[matchup].titanLocation == "Bridge" or byPassBridgeRestriction == True)):
+				(RivalChampionsInfo[matchup].titanLocation == "Bridge")):
 				# print("Considering: "+FMEchamp[FMEChampionName] + " vs. " +matchup[RivalChampionName]+ " "+ str(matchup[1][RivalTitanPower]))
 				if (FMEChampionsInfo[FMEchamp].titanPower + 10000 > RivalChampionsInfo[matchup].titanPower):
 					optimalChamp = FMEchamp
@@ -187,7 +223,7 @@ def calculateTitanAttacks(byPassBridgeRestriction):
 			FMEChampionsInfo[optimalChamp].assignAttacks("Titan", matchup, RivalChampionsInfo[matchup].titanPower, RivalChampionsInfo[matchup].titanLocation, attacksNeeded, attackNote)
 			RivalChampionsInfo[matchup].titanCleared = positionCleared
 
-def calculateHeroAttacks():
+def calculateHeroAttacks(matchAgainstTop):
 	# print("\n\nHero Attacks:")
 	# for matchup in sortedRivalChampHeroesAndLocations:
 	for matchup in sortedRivalChampHeroesAndLocations:
@@ -200,9 +236,12 @@ def calculateHeroAttacks():
 			# print("Considering "+FMEchamp+" vs " + matchup)
 			if ((FMEChampionsInfo[FMEchamp].heroPower > RivalChampionsInfo[matchup].heroPower or 
 				FMEChampionsInfo[FMEchamp].heroPower + 1000 > RivalChampionsInfo[matchup].heroPower) and 
+				RivalChampionsInfo[matchup].heroLocation not in IgnoreBuildings and
 				FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
 				# Check to see if there is a clear advantage number wise
 				# print("Considering "+FMEchamp+" vs " + matchup)
+				
+
 				OptimizingAttack = True
 				if optimalChamp == "":
 					optimalChamp = FMEchamp
@@ -210,7 +249,13 @@ def calculateHeroAttacks():
 				elif (FMEChampionsInfo[FMEchamp].heroPower < FMEChampionsInfo[optimalChamp].heroPower):
 					optimalChamp = FMEchamp
 
-			elif (not OptimizingAttack and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and RivalChampionsInfo[matchup].heroCleared == False):
+				# Break and move on if we're matching against top guys
+				if(matchAgainstTop):
+					break
+
+			elif (not OptimizingAttack and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and 
+				RivalChampionsInfo[matchup].heroLocation not in IgnoreBuildings and
+				RivalChampionsInfo[matchup].heroCleared == False):
 				if ((FMEChampionsInfo[FMEchamp].heroPower+5000)>RivalChampionsInfo[matchup].heroPower and FMEChampionsInfo[FMEchamp].attacksRemaining > 0 and 
 					RivalChampionsInfo[matchup].heroCleared == False):
 					attackNote = " - Should be close, may require cleanup"
@@ -225,9 +270,67 @@ def calculateHeroAttacks():
 			# print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
 			FMEChampionsInfo[optimalChamp].assign("Hero", matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation, attackNote)
 			RivalChampionsInfo[matchup].heroCleared = positionCleared
+
+# aType = Titan | Hero
+def resetAssignmentCategory(aType):
+	for champ in FMEChampionsInfo.keys():
+		if FMEChampionsInfo[champ].attacksRemaining < 2:
+			#
+			tempAssignments = list(FMEChampionsInfo[champ].assignments)
+			for assignment in tempAssignments:
+				if(assignment.assignmentType == aType and aType == "Titan"):
+					# if( 30000 > (FMEChampionsInfo[champ].titanPower - assignment.rivalPower) or True):
+					# print(champ +" : "+ str(len(FMEChampionsInfo[champ].assignments)))
+					# print(assignment.rivalName)
+					RivalChampionsInfo[assignment.rivalName].titanCleared = False
+					FMEChampionsInfo[champ].assignments.remove(assignment)
+					FMEChampionsInfo[champ].attacksRemaining = 2 - len(FMEChampionsInfo[champ].assignments)
+				elif(assignment.assignmentType == aType and aType == "Hero"):
+					RivalChampionsInfo[assignment.rivalName].heroCleared = False
+					FMEChampionsInfo[champ].assignments.remove(assignment)
+					FMEChampionsInfo[champ].attacksRemaining = 2 - len(FMEChampionsInfo[champ].assignments)					
+
 def main():
 	calculateTitanAttacks(False)
-	calculateHeroAttacks()
+	calculateHeroAttacks(False)
+	# resetAssignmentCategory("Titan")
+	# calculateTitanAttacks(True)
+	# exit()
+	# Determine if any buildings should be ignored
+	# pdb.set_trace()
+	for target in RivalChampionsInfo.keys():
+		if RivalChampionsInfo[target].heroCleared == False :
+			if(RivalChampionsInfo[target].heroLocation not in IgnoreBuildings):
+				IgnoreBuildings.append(RivalChampionsInfo[target].heroLocation)
+		if RivalChampionsInfo[target].titanCleared == False :
+			if(RivalChampionsInfo[target].titanLocation not in IgnoreBuildings):
+				IgnoreBuildings.append(RivalChampionsInfo[target].titanLocation)
+
+	if(len(IgnoreBuildings)>0):
+		if(len(IgnoreBuildings)>2):
+			easiestBuilding = ""
+			for building in IgnoreBuildings:
+				if easiestBuilding == "":
+					easiestBuilding = building
+				elif DifficultyScore[building] < DifficultyScore[easiestBuilding]:
+					easiestBuilding = building
+			print(easiestBuilding)
+			IgnoreBuildings.remove(easiestBuilding)
+			resetAssignmentCategory("Titan")
+			resetAssignmentCategory("Hero")
+			calculateTitanAttacks(False)
+			calculateHeroAttacks(False)
+		else:
+			resetAssignmentCategory("Titan")
+			resetAssignmentCategory("Hero")
+			calculateTitanAttacks(False)
+			calculateHeroAttacks(False)
+			# resetAssignmentCategory("Titan")
+			# calculateTitanAttacks(True)
+
+
+
+	# --------------Print out Assignments--------------
 	if(categorizeAssignments):
 		categories = {"Titan", "Hero"}
 		for category in categories:
@@ -243,14 +346,15 @@ def main():
 				FMEChampionsInfo[champ].printAssignments(champ)
 	
 
-
+	# --------------Print out Remaining Attackers and Targets--------------
 	print("\n\nRemaining Attackers:")	
 	# for hero in FMEChampAttacks.keys():
 	for hero in FMEChampionsInfo.keys():
 		if FMEChampionsInfo[hero].attacksRemaining > 0:
 			print(hero, "(H:"+str(FMEChampionsInfo[hero].heroPower)+",T:"+str(FMEChampionsInfo[hero].titanPower)+") has "+ str(FMEChampionsInfo[hero].attacksRemaining)+" attacks remaining.")
 
-	print("\n\nRemaining Targets:")
+	print("\n\nIgnoring Buildings:"+str(IgnoreBuildings))
+	print("Remaining Targets:")
 	for target in RivalChampionsInfo.keys():
 		if RivalChampionsInfo[target].heroCleared == False :
 			print(target+" H:"+str(RivalChampionsInfo[target].heroPower)+" at "+ RivalChampionsInfo[target].heroLocation)
