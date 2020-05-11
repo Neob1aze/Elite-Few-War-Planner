@@ -66,9 +66,9 @@ class ChampionInfo:
 		for assignment in self.assignments:
 			if assignment.assignmentType == assignmentType:
 				if assignment.assignmentType == "Hero":
-					print(champName+"(H:"+str(self.heroPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
+					print(champName+"(H:"+str(self.heroPower)+ ") "+assignment.rivalName+ "("+ str(assignment.rivalPower)+ ") "+ assignment.rivalLocation + assignment.attackNote)
 				elif assignment.assignmentType == "Titan":
-					print(champName+"(T:"+str(self.titanPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ " "+ assignment.rivalLocation + assignment.attackNote)
+					print(champName+"(T:"+str(self.titanPower)+ ") "+assignment.rivalName+ "("+ str(assignment.rivalPower)+ ") "+ assignment.rivalLocation + assignment.attackNote)
 
 	def clearAttacks(self):
 		self.assignments.clear()
@@ -225,16 +225,45 @@ def calculateHeroAttacks():
 			# print(optimalChamp+"(H:"+str(FMEChampionsInfo[optimalChamp].heroPower)+ ") "+matchup+ " "+ str(RivalChampionsInfo[matchup].heroPower)+ " "+ RivalChampionsInfo[matchup].heroLocation + attackNote)
 			FMEChampionsInfo[optimalChamp].assign("Hero", matchup, RivalChampionsInfo[matchup].heroPower, RivalChampionsInfo[matchup].heroLocation, attackNote)
 			RivalChampionsInfo[matchup].heroCleared = positionCleared
+
+def printAssignedTargetBasedOnName(rivalChampName, assignmentType):
+	for champ in FMEChampionsInfo.keys():
+		for assignment in FMEChampionsInfo[champ].assignments:
+			if assignment.rivalName == rivalChampName and assignment.assignmentType == assignmentType:
+				if assignment.assignmentType == "Hero":
+					print(champ+"(H:"+str(FMEChampionsInfo[champ].heroPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ assignment.attackNote)
+				elif assignment.assignmentType == "Titan":
+					print(champ+"(T:"+str(FMEChampionsInfo[champ].titanPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ assignment.attackNote)
+
 def main():
 	calculateTitanAttacks(False)
 	calculateHeroAttacks()
 	if(categorizeAssignments):
 		categories = {"Titan", "Hero"}
+		# buildings = {"Bridge","Fire","Nature","Ice","Spring","Lighthouse","Barracks","Mage", "Citadel","Foundry"}
 		for category in categories:
-			print("\n\n"+ category +" Attacks:")
-			for champ in FMEChampionsInfo.keys():
-				if FMEChampionsInfo[champ].attacksRemaining < 2:
-					FMEChampionsInfo[champ].printAssignmentCategory(champ, category)
+			if category == "Titan":
+				buildings = {"Bridge","Fire","Nature","Ice","Spring"}
+			elif category == "Hero":
+				buildings = {"Lighthouse","Barracks","Mage", "Citadel","Foundry"}
+			print("\n\n__**"+ category +" Attacks:**__")
+			for building in buildings:
+				print("\n**"+ building +":**")
+				for target in RivalChampionsInfo.keys():
+					if RivalChampionsInfo[target].heroLocation == building or RivalChampionsInfo[target].titanLocation == building:
+						if RivalChampionsInfo[target].heroCleared == False:
+							print("??? - "+target+"(H:"+str(RivalChampionsInfo[target].heroPower)+")")
+						elif RivalChampionsInfo[target].titanCleared == False:
+							print("??? - "+target+"(T:"+str(RivalChampionsInfo[target].titanPower)+")")
+						elif RivalChampionsInfo[target].heroCleared == True:
+							printAssignedTargetBasedOnName(target,"Hero")
+						elif RivalChampionsInfo[target].titanCleared == True:
+							printAssignedTargetBasedOnName(target,"Titan")
+
+
+				# for champ in FMEChampionsInfo.keys():
+				# 	if FMEChampionsInfo[champ].attacksRemaining < 2:
+				# 		FMEChampionsInfo[champ].printAssignmentCategory(champ, category)
 
 	else:	
 		print("\n\nAssignments:")
@@ -242,20 +271,24 @@ def main():
 			if FMEChampionsInfo[champ].attacksRemaining < 2:
 				FMEChampionsInfo[champ].printAssignments(champ)
 	
+	if(not categorizeAssignments):
+		print("\n\nRemaining Targets:")
+		for target in RivalChampionsInfo.keys():
+			if RivalChampionsInfo[target].heroCleared == False :
+				print(target+" H:"+str(RivalChampionsInfo[target].heroPower)+" at "+ RivalChampionsInfo[target].heroLocation)
+			if RivalChampionsInfo[target].titanCleared == False :
+				print(target+" T:"+str(RivalChampionsInfo[target].titanPower)+" at "+ RivalChampionsInfo[target].titanLocation)
 
-
-	print("\n\nRemaining Attackers:")	
+	print("\n\nChampion Pool:")	
 	# for hero in FMEChampAttacks.keys():
 	for hero in FMEChampionsInfo.keys():
 		if FMEChampionsInfo[hero].attacksRemaining > 0:
 			print(hero, "(H:"+str(FMEChampionsInfo[hero].heroPower)+",T:"+str(FMEChampionsInfo[hero].titanPower)+") has "+ str(FMEChampionsInfo[hero].attacksRemaining)+" attacks remaining.")
+	for hero in FMEChampionsInfo.keys():
+		if FMEChampionsInfo[hero].attacksRemaining == 0:
+			print(hero, "(H:"+str(FMEChampionsInfo[hero].heroPower)+",T:"+str(FMEChampionsInfo[hero].titanPower)+") has "+ str(FMEChampionsInfo[hero].attacksRemaining)+" attacks remaining.")
 
-	print("\n\nRemaining Targets:")
-	for target in RivalChampionsInfo.keys():
-		if RivalChampionsInfo[target].heroCleared == False :
-			print(target+" H:"+str(RivalChampionsInfo[target].heroPower)+" at "+ RivalChampionsInfo[target].heroLocation)
-		if RivalChampionsInfo[target].titanCleared == False :
-			print(target+" T:"+str(RivalChampionsInfo[target].titanPower)+" at "+ RivalChampionsInfo[target].titanLocation)
+
 
 
 main()
