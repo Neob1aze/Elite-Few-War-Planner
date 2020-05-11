@@ -231,9 +231,9 @@ def printAssignedTargetBasedOnName(rivalChampName, assignmentType):
 		for assignment in FMEChampionsInfo[champ].assignments:
 			if assignment.rivalName == rivalChampName and assignment.assignmentType == assignmentType:
 				if assignment.assignmentType == "Hero":
-					print(champ+"(H:"+str(FMEChampionsInfo[champ].heroPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ assignment.attackNote)
+					print(champ+"(H:"+str(FMEChampionsInfo[champ].heroPower)+ ") -> "+assignment.rivalName+ "(H:"+ str(assignment.rivalPower)+")"+ assignment.attackNote)
 				elif assignment.assignmentType == "Titan":
-					print(champ+"(T:"+str(FMEChampionsInfo[champ].titanPower)+ ") "+assignment.rivalName+ " "+ str(assignment.rivalPower)+ assignment.attackNote)
+					print(champ+"(T:"+str(FMEChampionsInfo[champ].titanPower)+ ") -> "+assignment.rivalName+ "(T:"+ str(assignment.rivalPower)+")"+ assignment.attackNote)
 
 def main():
 	calculateTitanAttacks(False)
@@ -250,15 +250,14 @@ def main():
 			for building in buildings:
 				print("\n**"+ building +":**")
 				for target in RivalChampionsInfo.keys():
-					if RivalChampionsInfo[target].heroLocation == building or RivalChampionsInfo[target].titanLocation == building:
-						if RivalChampionsInfo[target].heroCleared == False:
-							print("??? - "+target+"(H:"+str(RivalChampionsInfo[target].heroPower)+")")
-						elif RivalChampionsInfo[target].titanCleared == False:
-							print("??? - "+target+"(T:"+str(RivalChampionsInfo[target].titanPower)+")")
-						elif RivalChampionsInfo[target].heroCleared == True:
-							printAssignedTargetBasedOnName(target,"Hero")
-						elif RivalChampionsInfo[target].titanCleared == True:
-							printAssignedTargetBasedOnName(target,"Titan")
+					if RivalChampionsInfo[target].heroCleared == False and RivalChampionsInfo[target].heroLocation == building:
+						print("??? -> "+target+"(H:"+str(RivalChampionsInfo[target].heroPower)+")")
+					elif RivalChampionsInfo[target].titanCleared == False and RivalChampionsInfo[target].titanLocation == building:
+						print("??? -> "+target+"(T:"+str(RivalChampionsInfo[target].titanPower)+")")
+					elif RivalChampionsInfo[target].heroCleared == True and RivalChampionsInfo[target].heroLocation == building:
+						printAssignedTargetBasedOnName(target,"Hero")
+					elif RivalChampionsInfo[target].titanCleared == True and RivalChampionsInfo[target].titanLocation == building:
+						printAssignedTargetBasedOnName(target,"Titan")
 
 
 				# for champ in FMEChampionsInfo.keys():
